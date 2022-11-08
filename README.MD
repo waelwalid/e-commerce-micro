@@ -1,5 +1,5 @@
-# E-COMMERCE Box
-> E-COMMERCE  - repository for Services Containerization
+# E-Commerce Box
+> E-Commerce  system in micro services archticture
 
 ## Requirements
 * [Docker](https://docs.docker.com/install/overview/) (or docker on a docker-machine-env for [macOS](https://docs.docker.com/machine/))
@@ -139,7 +139,7 @@ docker-compose up -d
 - [ ] Check logs for specific application (e.g. `./logs.sh <container>`)
 
 
-## E-COMMERCE Box, Nov, 2022
+## E-Commerce Box, Nov, 2022
 
 Naming convention:
 - Docker Compose Service: same as github repository
