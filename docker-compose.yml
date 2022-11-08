@@ -5,15 +5,18 @@ services:
       context: .docker/node
       dockerfile: node18.Dockerfile
 
-  nginx-proxy:
+  e-nginx-proxy:
     build:
-      context: ./www/nginx-proxy
+      context: ./www/e-nginx-proxy
       dockerfile: Dockerfile
     container_name: nginx-proxy
     tty: true
+    depends_on:
+      - e-authentication
+      - e-catalog-service
     volumes:
       # - .:/app
-      - ./www/nginx-proxy/nginx.conf:/etc/nginx/nginx.conf
+      - ./www/e-nginx-proxy/nginx.conf:/etc/nginx/nginx.conf
     ports:
       - 8000:80
     restart: always
@@ -23,38 +26,38 @@ services:
         aliases:
           - e-commerce.local
 
-  authentication:
+  e-authentication:
     image: 'e-commerce_node18'
-    container_name: user_authentication
+    container_name: e-authentication
     depends_on:
       - node18
     volumes:
-      - './www/authentication/:/var/www/app'
-      - ./www/authentication/node_modules:/var/www/app/node_modules/
+      - './www/e-authentication/:/var/www/app'
+      - ./www/e-authentication/node_modules:/var/www/app/node_modules/
     restart: always
     networks:
       net_range:
         ipv4_address: 172.31.0.3
         aliases:
-          - authentication.local
+          - e-authentication.local
     command: >
       bash -c "npm install
       && npm start"
 
 
-  catalog_service:
+  e-catalog-service:
     build:
       context: .docker/php
       dockerfile: apache-php8.1.Dockerfile
     tty: true
     # image: 'laravelapp'
-    container_name: catalog_service
+    container_name: e-catalog-service
     depends_on:
       - mysqldb
     ports:
       - 8080:80
     volumes:
-      - ./www/catalog-service:/var/www/html
+      - ./www/e-catalog-service:/var/www/html
     networks:
       net_range:
         ipv4_address: 172.31.0.4
@@ -63,9 +66,9 @@ services:
     # command: bash -c "php-fpm"
     command: >
       bash -c "cp .env.example .env 
+      && composer install
       && chmod -R 777 ./storage
       && php artisan key:generate
-      && composer install
       && apache2-foreground"
 
   mongodb:

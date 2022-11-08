@@ -20,7 +20,7 @@ declare -A services
 services["e-authentication"]="main";
 services["e-catalog-service"]="main";
 services["e-nginx-proxy"]="main";
-necessary_application=("mysqldb")
+necessary_application=("mysqldb" "mongodb" "e-catalog-service" "e-authentication")
 
 function install_dependencies() {
     # http://www.figlet.org/
@@ -118,6 +118,7 @@ function build() {
         docker network create net_range
         for APPDATA in "${necessary_application[@]}"; do
             echo -e "${GREEN}Build DockerImages${NC} $APPDATA"
+            sleep 5
             docker-compose build --compress --force-rm $APPDATA
         done
 
@@ -129,31 +130,38 @@ function create_databases() {
 
     while :; do
         docker exec -i mysqldb mysql -uroot -proot  <<< "ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY 'root'; FLUSH PRIVILEGES; SELECT user,authentication_string,plugin,host FROM mysql.user;"
-        docker exec -i mysqldb mysql -uroot -proot catalog_service < ./www/e-catalog-service/dump/catalog_service.sql
+        
         
         CBCLUSTERVERIFY_DATABASE=$(echo $?)
-        # echo "Waiting service into database is up. Last return: $CBCLUSTERVERIFY_DATABASE. Expected: 0"
-        # if [ "$CBCLUSTERVERIFY_DATABASE" == '0' ]; then
-        #     QUERY_CREATE_DATABASE=""
-        #     for SCHEMA in "${database_local_schemas[@]}"; do
-        #         QUERY_CREATE_DATABASE+="CREATE DATABASE IF NOT EXISTS ${SCHEMA}; "
-        #     done
-        #     echo -e "${GREEN}Create databases${NC} \n ${QUERY_CREATE_DATABASE}"
-        #     docker exec mysqldb mysql --user=root --password=root -e "${QUERY_CREATE_DATABASE}" 2>/dev/null
-        #     break
-        # fi
+        echo "Waiting service into database is up. Last return: $CBCLUSTERVERIFY_DATABASE. Expected: 0"
+        if [ "$CBCLUSTERVERIFY_DATABASE" == '0' ]; then
+            QUERY_CREATE_DATABASE=""
+            for SCHEMA in "${database_local_schemas[@]}"; do
+                QUERY_CREATE_DATABASE+="CREATE DATABASE IF NOT EXISTS ${SCHEMA}; "
+            done
+            echo -e "${GREEN}Create databases${NC} \n ${QUERY_CREATE_DATABASE}"
+            docker exec mysqldb mysql --user=root --password=root -e "${QUERY_CREATE_DATABASE}" 2>/dev/null
+            break
+        fi
         sleep 5
+
+        
     done
+    docker exec -i mysqldb mysql -uroot -proot catalog_service < ./www/e-catalog-service/dump/catalog_service.sql
 }
 
 function up_dev() {
         
         sleep 3
+        
+        for APPDATA in "${necessary_application[@]}"; do
+            echo -e "${GREEN}Running the Container${NC} $APPDATA"
+            docker-compose up -d $APPDATA
+            sleep 5
+        done
+        echo -e "${GREEN} Building Necessary apps ...${NC} \n"
+        sleep 5
         docker-compose up
-        # for APPDATA in "${necessary_application[@]}"; do
-        #     echo -e "${GREEN}Running the Container${NC} $APPDATA"
-        #     docker-compose up -d $APPDATA
-        # done
 }
 
 if [ -z $@ ]; then
