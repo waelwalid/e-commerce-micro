@@ -3,6 +3,8 @@
 
 ![e-commerce(6) drawio](https://user-images.githubusercontent.com/11830470/200684383-1ec6205a-1c18-4836-9708-54a13831970d.png)
 
+![e-commerce(6) drawio-placeorder](https://user-images.githubusercontent.com/11830470/200684658-13c7218b-ad94-4868-8a32-def02b2b0656.png)
+
 
 ## Requirements
 * [Docker](https://docs.docker.com/install/overview/) (or docker on a docker-machine-env for [macOS](https://docs.docker.com/machine/))
