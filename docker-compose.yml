@@ -68,6 +68,7 @@ services:
       bash -c "cp .env.example .env 
       && composer install
       && chmod -R 777 ./storage
+      && php artisan storage:link
       && php artisan key:generate
       && apache2-foreground"
 
