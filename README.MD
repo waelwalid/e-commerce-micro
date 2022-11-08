@@ -1,4 +1,4 @@
-# E-COMMERCE E-COMMERCE Box
+# E-COMMERCE Box
 > E-COMMERCE  - repository for Services Containerization
 
 ## Requirements
