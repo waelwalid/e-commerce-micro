@@ -1,0 +1,116 @@
+version: '3.8'
+services:
+  node18:
+    build:
+      context: .docker/node
+      dockerfile: node18.Dockerfile
+
+  nginx-proxy:
+    build:
+      context: ./www/nginx-proxy
+      dockerfile: Dockerfile
+    container_name: nginx-proxy
+    tty: true
+    volumes:
+      # - .:/app
+      - ./www/nginx-proxy/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 8000:80
+    restart: always
+    networks:
+      net_range:
+        ipv4_address: 172.31.0.2
+        aliases:
+          - e-commerce.local
+
+  authentication:
+    image: 'e-commerce_node18'
+    container_name: user_authentication
+    depends_on:
+      - node18
+    volumes:
+      - './www/authentication/:/var/www/app'
+      - ./www/authentication/node_modules:/var/www/app/node_modules/
+    restart: always
+    networks:
+      net_range:
+        ipv4_address: 172.31.0.3
+        aliases:
+          - authentication.local
+    command: >
+      bash -c "npm install
+      && npm start"
+
+
+  catalog_service:
+    build:
+      context: .docker/php
+      dockerfile: apache-php8.1.Dockerfile
+    tty: true
+    # image: 'laravelapp'
+    container_name: catalog_service
+    depends_on:
+      - mysqldb
+    ports:
+      - 8080:80
+    volumes:
+      - ./www/catalog-service:/var/www/html
+    networks:
+      net_range:
+        ipv4_address: 172.31.0.4
+        aliases:
+          - catalog.local
+    # command: bash -c "php-fpm"
+    command: >
+      bash -c "cp .env.example .env 
+      && chmod -R 777 ./storage
+      && php artisan key:generate
+      && composer install
+      && apache2-foreground"
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_INITDB_DATABASE: authentication_service
+
+    ports:
+      - 27017:27017
+    volumes:
+      - ./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      net_range:
+        ipv4_address: 172.31.0.10
+        aliases:
+          - e-mongo.local
+  
+  mysqldb:
+    container_name: mysqldb
+    restart: always
+    image: mysql:8
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - 'mysql:/var/lib/mysql'
+    ports:
+      - '3306:3306'
+      - '2206:22'
+    networks:
+     net_range:
+        ipv4_address: 172.31.0.11
+        aliases:
+          - mysql.local
+
+volumes:
+  mysql:
+#   redis:
+#     driver: local
+networks:
+  net_range:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.31.0.0/24
