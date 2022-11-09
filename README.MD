@@ -5,7 +5,8 @@
 
 ![e-commerce(6) drawio-placeorder](https://user-images.githubusercontent.com/11830470/200684658-13c7218b-ad94-4868-8a32-def02b2b0656.png)
 
-# API Docs: https://documenter.getpostman.com/view/21015452/2s8YehTbx4 
+# API Docs: 
+https://documenter.getpostman.com/view/21015452/2s8YehTbx4 
 
 ## Requirements
 * [Docker](https://docs.docker.com/install/overview/) (or docker on a docker-machine-env for [macOS](https://docs.docker.com/machine/))
